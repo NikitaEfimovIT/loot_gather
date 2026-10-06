@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Loot Gather — лут сезона Midnight</title>
+  <meta name="description" content="Весь лут текущего сезона WoW Midnight для твоего спека: подземелья M+, рейды, тир-сет и популярность у топ-игроков.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Forum&family=Manrope:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <!-- ponytail: Wowhead tooltips (full item stats on icon hover). No SRI: the script is unversioned and
+       changes often, a hash would break it. Page holds no secrets; delete these 2 lines to drop it. -->
+  <script>var whTooltips = { colorLinks: false, iconizeLinks: false, renameLinks: false }</script>
+  <script src="https://wow.zamimg.com/js/tooltips.js" async></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <h1>Loot Gather</h1>
+      <p id="season" class="muted"></p>
+    </div>
+    <div class="pickers">
+      <label>Класс <select id="cls"></select></label>
+      <label>Специализация <select id="spec"></select></label>
+    </div>
+  </header>
+  <main id="view" aria-live="polite"><p class="muted">Загрузка…</p></main>
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>
