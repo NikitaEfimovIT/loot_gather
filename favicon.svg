@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1a1e2e"/>
+      <stop offset="100%" stop-color="#0a0c12"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#F0D080"/>
+      <stop offset="45%"  stop-color="#D4AE5C"/>
+      <stop offset="100%" stop-color="#9A6E1A"/>
+    </linearGradient>
+    <linearGradient id="goldRim" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#FFE896"/>
+      <stop offset="100%" stop-color="#B8841E"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="64" height="64" fill="url(#bg)"/>
+
+  <!-- Outer decorative border -->
+  <rect x="2" y="2" width="60" height="60" rx="3" ry="3"
+        fill="none" stroke="url(#goldRim)" stroke-width="1.5" opacity="0.7"/>
+
+  <!-- Corner ornaments -->
+  <polygon points="2,2  10,2  2,10"   fill="url(#gold)" opacity="0.8"/>
+  <polygon points="62,2  54,2  62,10"  fill="url(#gold)" opacity="0.8"/>
+  <polygon points="2,62  10,62  2,54"  fill="url(#gold)" opacity="0.8"/>
+  <polygon points="62,62 54,62 62,54"  fill="url(#gold)" opacity="0.8"/>
+
+  <!-- Lion head silhouette (simplified WoW Alliance crest) -->
+  <!-- Mane outer circle -->
+  <circle cx="32" cy="30" r="18" fill="url(#gold)" opacity="0.15"/>
+  <circle cx="32" cy="30" r="18" fill="none" stroke="url(#gold)" stroke-width="1" opacity="0.5"/>
+
+  <!-- Stylised "W" — WoW iconic letter -->
+  <path d="
+    M 14 18
+    L 19 44
+    L 26 30
+    L 32 40
+    L 38 30
+    L 45 44
+    L 50 18
+    L 46 18
+    L 41 38
+    L 35 27
+    L 32 33
+    L 29 27
+    L 23 38
+    L 18 18
+    Z
+  " fill="url(#gold)"/>
+
+  <!-- Top highlight on W -->
+  <path d="
+    M 14 18 L 18 18 L 23 38 L 25 33 L 23 28 L 19 18 Z
+  " fill="#FFE896" opacity="0.3"/>
+
+  <!-- Bottom line ornament -->
+  <line x1="12" y1="50" x2="52" y2="50"
+        stroke="url(#goldRim)" stroke-width="1" opacity="0.5"/>
+  <circle cx="32" cy="50" r="1.5" fill="url(#gold)" opacity="0.8"/>
+  <circle cx="22" cy="50" r="1"   fill="url(#gold)" opacity="0.5"/>
+  <circle cx="42" cy="50" r="1"   fill="url(#gold)" opacity="0.5"/>
+</svg>

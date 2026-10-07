@@ -1,6 +1,6 @@
 // Builds data.json: current-season loot per spec + popularity tiers.
 // Sources: Raidbots static data (loot), murlok.io (M+ usage), Warcraft Logs (raid usage, optional).
-import { writeFile } from 'node:fs/promises'
+import { mkdir, readdir, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 
 const RAIDBOTS = 'https://www.raidbots.com/static/data/live/'
@@ -12,6 +12,11 @@ const RETRIES = 4
 const RETRY_DELAY_MS = 5000
 const DUNGEON_COUNT = 8
 const MIN_SEASON_ITEMS = 100
+// Icons are self-hosted: wow.zamimg.com is blocked in RU, Blizzard's CDN lacks half of the 12.x icons by name.
+const ICON_CDN = 'https://wow.zamimg.com/images/wow/icons/large/' // 56px → crisp at 26px on 2x screens
+const ICON_DIR = new URL('./icons/', import.meta.url)
+const ICON_CONCURRENCY = 6
+const ICON_NAME = /^[\w-]+$/ // names come from Raidbots and become file paths
 
 // [ruName, armorSubclass]: 1 cloth, 2 leather, 3 mail, 4 plate
 const CLASSES = {
@@ -48,6 +53,50 @@ const NAMES_RU = {
   2888: "Нек'зали Душительница Душ", 2874: 'Погребенные стражи', 2894: 'Потерявшиеся исследователи',
   2882: 'Вашник Тлетворный', 2871: 'Ссзорак', 2887: 'Два Клыка', 2883: 'Спиральный алтарь',
   2895: "Ула'тек", 2849: 'Нимрисса Волногон',
+}
+// Spec icons: verified map copied from Raidsmith src/lib/spec-icons.ts (keys = talents.json EN names).
+// Class icons are `classicon_<class name without spaces>`. Both are self-hosted by syncIcons.
+const SPEC_ICONS = {
+  'Death Knight:Blood': 'spell_deathknight_bloodpresence',
+  'Death Knight:Frost': 'spell_deathknight_frostpresence',
+  'Death Knight:Unholy': 'spell_deathknight_unholypresence',
+  'Demon Hunter:Havoc': 'ability_demonhunter_specdps',
+  'Demon Hunter:Vengeance': 'ability_demonhunter_spectank',
+  'Demon Hunter:Devourer': 'classicon_demonhunter_void',
+  'Druid:Balance': 'spell_nature_starfall',
+  'Druid:Feral': 'ability_druid_catform',
+  'Druid:Guardian': 'ability_racial_bearform',
+  'Druid:Restoration': 'spell_nature_healingtouch',
+  'Evoker:Devastation': 'classicon_evoker_devastation',
+  'Evoker:Preservation': 'classicon_evoker_preservation',
+  'Evoker:Augmentation': 'classicon_evoker_augmentation',
+  'Hunter:Beast Mastery': 'ability_hunter_bestialdiscipline',
+  'Hunter:Marksmanship': 'ability_hunter_focusedaim',
+  'Hunter:Survival': 'ability_hunter_camouflage',
+  'Mage:Arcane': 'spell_holy_magicalsentry',
+  'Mage:Fire': 'spell_fire_firebolt02',
+  'Mage:Frost': 'spell_frost_frostbolt02',
+  'Monk:Brewmaster': 'spell_monk_brewmaster_spec',
+  'Monk:Mistweaver': 'spell_monk_mistweaver_spec',
+  'Monk:Windwalker': 'spell_monk_windwalker_spec',
+  'Paladin:Holy': 'spell_holy_holybolt',
+  'Paladin:Protection': 'ability_paladin_shieldofthetemplar',
+  'Paladin:Retribution': 'spell_holy_auraoflight',
+  'Priest:Discipline': 'spell_holy_powerwordshield',
+  'Priest:Holy': 'spell_holy_guardianspirit',
+  'Priest:Shadow': 'spell_shadow_shadowwordpain',
+  'Rogue:Assassination': 'ability_rogue_eviscerate',
+  'Rogue:Outlaw': 'ability_rogue_waylay',
+  'Rogue:Subtlety': 'ability_stealth',
+  'Shaman:Elemental': 'spell_nature_lightning',
+  'Shaman:Enhancement': 'spell_shaman_improvedstormstrike',
+  'Shaman:Restoration': 'spell_nature_magicimmunity',
+  'Warlock:Affliction': 'spell_shadow_deathcoil',
+  'Warlock:Demonology': 'spell_shadow_metamorphosis',
+  'Warlock:Destruction': 'spell_shadow_rainoffire',
+  'Warrior:Arms': 'ability_warrior_savageblow',
+  'Warrior:Fury': 'ability_warrior_innerrage',
+  'Warrior:Protection': 'ability_warrior_defensivestance',
 }
 const SLOTS_RU = {
   1: 'Голова', 2: 'Шея', 3: 'Плечи', 5: 'Грудь', 20: 'Грудь', 6: 'Пояс', 7: 'Ноги', 8: 'Ступни',
@@ -330,14 +379,50 @@ async function raidUsage(specs, raids) {
   return out
 }
 
+// ponytail: unlike rating sources, a failed icon only warns — icons are cosmetic and the
+// frontend falls back to a letter stub. Downloads only names not already on disk.
+async function syncIcons(names) {
+  await mkdir(ICON_DIR, { recursive: true })
+  const have = new Set(await readdir(ICON_DIR))
+  const queue = [...new Set(names)].filter((n) => ICON_NAME.test(n) && !have.has(`${n}.jpg`))
+  const total = queue.length
+  let failed = 0
+  const worker = async () => {
+    for (let name = queue.pop(); name; name = queue.pop()) {
+      try {
+        const res = await fetchRetry(`${ICON_CDN}${name}.jpg`)
+        await writeFile(new URL(`${name}.jpg`, ICON_DIR), Buffer.from(await res.arrayBuffer()))
+      } catch (err) {
+        failed++
+        console.warn(`icon ${name}: ${err.message}`)
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: ICON_CONCURRENCY }, worker))
+  console.log(`icons: ${total - failed} downloaded, ${failed} failed, ${have.size} already present`)
+}
+
+const classIcon = (className) => `classicon_${className.toLowerCase().replaceAll(' ', '')}`
+
+// New spec without a mapped icon falls back to its class icon (warns, never fails the build).
+function specIcon(spec) {
+  const icon = SPEC_ICONS[`${spec.className}:${spec.specName}`]
+  if (!icon) console.warn(`no spec icon for ${spec.className}/${spec.specName} → class icon`)
+  return icon ?? classIcon(spec.className)
+}
+
 function classesOut(specs) {
   const ids = [...new Set(specs.map((s) => s.classId))]
     .sort((a, b) => CLASSES[a][0].localeCompare(CLASSES[b][0], 'ru'))
-  return ids.map((id) => ({
-    id,
-    ru: CLASSES[id][0],
-    specs: specs.filter((s) => s.classId === id).map((s) => ({ id: s.id, ru: SPECS[s.id][0] })),
-  }))
+  return ids.map((id) => {
+    const own = specs.filter((s) => s.classId === id)
+    return {
+      id,
+      ru: CLASSES[id][0],
+      ic: classIcon(own[0].className),
+      specs: own.map((s) => ({ id: s.id, ru: SPECS[s.id][0], ic: specIcon(s) })),
+    }
+  })
 }
 
 function specRatings(specs, loot, weaponSpecs, mplus, raid) {
@@ -378,6 +463,8 @@ async function main() {
     items: Object.fromEntries(loot.map(({ item, site, isTier }) => [item.id, toOut(item, site, names, isTier)])),
     specs: specRatings(specs, loot, weaponSpecs, mplus, raid),
   }
+  const pickerIcons = data.classes.flatMap((c) => [c.ic, ...c.specs.map((s) => s.ic)])
+  await syncIcons([...Object.values(data.items).map((it) => it.i), ...pickerIcons])
   await writeFile(new URL('./data.json', import.meta.url), JSON.stringify(data))
   console.log(`data.json written: ${Object.keys(data.items).length} items, raid ratings: ${data.hasRaid}`)
 }

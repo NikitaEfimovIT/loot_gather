@@ -1,0 +1,376 @@
+/* Sidebar filters + spec picker (design handoff v2), on Raidsmith tokens from style.css. */
+
+/* ============ Sidebar ============ */
+.filters {
+    flex: 1 1 240px;
+    max-width: 100%;
+    position: sticky;
+    top: var(--space-6);
+    margin-top: var(--space-7);
+    display: grid;
+    gap: 20px;
+    padding: var(--space-6);
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--card-shadow);
+}
+.facets {
+    display: grid;
+    gap: 20px;
+}
+.facet {
+    display: grid;
+    gap: var(--space-4);
+}
+.search {
+    width: 100%;
+    padding: 10px var(--space-5);
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--text-primary);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    outline: none;
+}
+.search::placeholder {
+    color: var(--text-muted);
+}
+.search:focus {
+    border-color: var(--gold-dim);
+}
+.search:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: -2px;
+}
+
+/* Raidsmith Seg.css, stretched to two equal columns; radio semantics instead of aria-pressed */
+.seg-control {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    background: var(--surface-0);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+.seg-control__btn {
+    min-block-size: 28px;
+    padding: 0 var(--space-4);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-radius: calc(var(--radius-sm) - var(--space-1));
+    cursor: pointer;
+    transition:
+        color 100ms,
+        background 100ms;
+}
+.seg-control__btn:focus-visible {
+    outline-offset: -2px;
+}
+.seg-control__btn:hover {
+    color: var(--text-primary);
+}
+.seg-control__btn[aria-checked='true'] {
+    color: var(--gold-bright);
+    background: var(--gold-bg-mid);
+    box-shadow: inset 0 0 0 1px var(--gold-dim);
+}
+
+/* Option lists: popularity tiers and slots */
+.facet-list {
+    display: grid;
+    gap: var(--space-1);
+}
+.facet-list--scroll {
+    max-height: 300px;
+    overflow: auto;
+}
+.facet-opt {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 5px var(--space-4);
+    font-size: var(--fs-base);
+    font-weight: 600;
+    text-align: left;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+.facet-opt--tier {
+    grid-template-columns: 2.4em minmax(0, 1fr) auto;
+    padding-block: var(--space-3);
+}
+.facet-opt:hover {
+    background: rgb(255 255 255 / 0.04);
+}
+.facet-opt[aria-pressed='true'] {
+    color: var(--text-primary);
+    background: var(--filter-on-bg);
+}
+.facet-opt--slot[aria-pressed='true'] {
+    color: var(--gold-bright);
+}
+.facet-opt .tier {
+    justify-content: center;
+}
+.facet-count {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+/* Stat toggles: off = outline, on = stat colour */
+.stat-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+.stat-pill {
+    padding: var(--space-2) var(--space-5);
+    font-size: var(--fs-base);
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+}
+.stat-pill:hover {
+    color: var(--text-primary);
+}
+.stat-pill[aria-pressed='true'] {
+    color: var(--c);
+    background: color-mix(in srgb, var(--c) 16%, transparent);
+    border-color: color-mix(in srgb, var(--c) 55%, transparent);
+}
+
+/* Raidsmith .checkbox at the handoff's 18px */
+.facet-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: var(--fs-md);
+    font-weight: 600;
+    cursor: pointer;
+}
+.checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    display: inline-grid;
+    place-content: center;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-mid);
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    transition:
+        background var(--duration-fast),
+        border-color var(--duration-fast);
+}
+.checkbox::before {
+    content: '';
+    width: 12px;
+    height: 12px;
+    background: var(--bg);
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+    transform: scale(0);
+    transition: transform var(--duration-fast) var(--ease-out);
+}
+.checkbox:hover {
+    border-color: var(--gold-dim);
+}
+.checkbox:checked {
+    background: var(--gold);
+    border-color: var(--gold);
+}
+.checkbox:checked::before {
+    transform: scale(1);
+}
+
+.facet-reset {
+    justify-self: start;
+    padding: var(--space-3) var(--space-5);
+    font-size: var(--fs-base);
+    font-weight: 700;
+    color: var(--gold-bright);
+    background: none;
+    border: 1px solid var(--gold-dim);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+.facet-reset:hover {
+    background: var(--gold-bg-soft);
+}
+
+/* ============ Spec picker ============ */
+.picker {
+    position: relative;
+}
+.picker__btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    min-height: 56px;
+    padding: var(--space-4) 14px var(--space-4) var(--space-4);
+    text-align: left;
+    color: var(--text-primary);
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: border-color var(--duration-fast);
+}
+.picker__btn:hover,
+.picker__btn[aria-expanded='true'] {
+    border-color: var(--gold);
+}
+.picker__icons {
+    position: relative;
+    flex: none;
+    width: 40px;
+    height: 40px;
+}
+.picker__class-icon {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+}
+.picker__spec-icon {
+    position: absolute;
+    right: -6px;
+    bottom: -6px;
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--surface-2);
+    border-radius: var(--radius-sm);
+}
+.picker__text {
+    display: grid;
+    min-width: 0;
+    line-height: 1.2;
+}
+.picker__class {
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: var(--ls-base);
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+.picker__spec {
+    font-size: var(--fs-md);
+    font-weight: 700;
+}
+.picker__chevron {
+    margin-left: var(--space-4);
+    color: var(--gold);
+}
+
+.picker__backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 25;
+    background: rgb(10 12 18 / 0.5);
+}
+.picker__pop {
+    position: absolute;
+    right: 0;
+    top: calc(100% + var(--space-4));
+    z-index: 30;
+    width: min(760px, calc(100vw - 2 * var(--page-gutter)));
+    max-height: 72vh;
+    overflow: auto;
+    padding: var(--space-4);
+    background: var(--surface-1);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    box-shadow: 0 24px 60px -20px rgb(0 0 0 / 0.95);
+}
+.picker__row {
+    display: grid;
+    grid-template-columns: minmax(0, 190px) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-5);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+}
+.picker__row--current {
+    background: rgb(255 255 255 / 0.03);
+}
+.picker__row-class {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    font-size: var(--fs-md);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+.picker__row-class img {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+}
+.picker__specs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+.picker__spec-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-4);
+    min-height: 36px;
+    padding: var(--space-2) 10px var(--space-2) var(--space-2);
+    font-size: var(--fs-base);
+    font-weight: 600;
+    color: var(--text-primary);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+.picker__spec-btn img {
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
+}
+.picker__spec-btn:hover {
+    border-color: var(--gold);
+}
+.picker__spec-btn[aria-current='true'] {
+    color: var(--gold-bright);
+    background: var(--gold-bg-mid);
+    border-color: var(--gold);
+}
+/* Below ~860px the aside wraps above main (240 + 24 gap + 560 + page padding); sticky would then
+   pin it over the scrolling cards. */
+@media (max-width: 860px) {
+    .filters {
+        position: static;
+    }
+}
+@media (max-width: 520px) {
+    .picker,
+    .picker__btn {
+        width: 100%;
+    }
+    .picker__row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
